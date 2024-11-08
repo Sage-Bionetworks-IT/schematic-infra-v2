@@ -16,4 +16,3 @@ jobs:
       role-to-assume: "arn:aws:iam::878654265857:role/sagebase-github-oidc-sage-bionetworks-schematic-infra"
       role-session-name: ${{ github.repository_owner }}-${{ github.event.repository.name }}-${{ github.run_id }}
       environment: "stage"
-      secrets-location: "ssm"

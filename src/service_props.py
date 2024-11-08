@@ -13,6 +13,7 @@ class ServiceProps:
       supports docker registry references (i.e. ghcr.io/sage-bionetworks/schematic-thumbor:latest)
     container_env_vars: a json dictionary of environment variables to pass into the container
       i.e. {"EnvA": "EnvValueA", "EnvB": "EnvValueB"}
+    container_secret_name: the secret's name in the AWS secrets manager
     """
 
     def __init__(
@@ -22,6 +23,7 @@ class ServiceProps:
         container_memory: int,
         container_location: str,
         container_env_vars: dict,
+        container_secret_name: str,
     ) -> None:
         self.container_name = container_name
         self.container_port = container_port
@@ -32,3 +34,4 @@ class ServiceProps:
             )
         self.container_location = container_location
         self.container_env_vars = container_env_vars
+        self.container_secret_name = container_secret_name

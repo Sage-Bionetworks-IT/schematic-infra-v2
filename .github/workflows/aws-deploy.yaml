@@ -25,9 +25,6 @@ on:
         required: true
         type: string
         default: "dev"
-      secrets-location:
-        type: string
-        default: "local"
 
 jobs:
   deploy:
@@ -55,4 +52,3 @@ jobs:
         run: cdk deploy --all --concurrency 5 --require-approval never
         env:
           ENV: ${{ inputs.environment }}
-          SECRETS: ${{ inputs.secrets-location }}

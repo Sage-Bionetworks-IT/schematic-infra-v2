@@ -66,26 +66,26 @@
     "dev": {
         "VPC_CIDR": "10.254.192.0/24",
         "FQDN": "dev.schematic.io",
-        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:631692904429:certificate/0e9682f6-3ffa-46fb-9671-b6349f5164d6"
-      },
+        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:631692904429:certificate/0e9682f6-3ffa-46fb-9671-b6349f5164d6",
+        "TAGS": {
+          "CostCenter": "NO PROGRAM / 000000"
+        }
+    },
     "stage": {
         "VPC_CIDR": "10.254.193.0/24",
         "FQDN": "stage.schematic.io",
-        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970"
-      },
+        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970",
+        "TAGS": {
+          "CostCenter": "NO PROGRAM / 000000"
+        }
+    },
     "prod": {
         "VPC_CIDR": "10.254.194.0/24",
         "FQDN": "prod.schematic.io",
-        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970"
-      },
-    "secrets": {
-        "MARIADB_PASSWORD": "/openchallenges/MARIADB_PASSWORD",
-        "MARIADB_ROOT_PASSWORD": "/openchallenges/MARIADB_ROOT_PASSWORD",
-        "GIT_HOST_KEY": "/openchallenges/GIT_HOST_KEY",
-        "GIT_PRIVATE_KEY": "/openchallenges/GIT_PRIVATE_KEY",
-        "AWS_LOADER_S3_ACCESS_KEY_ID": "/openchallenges/AWS_LOADER_S3_ACCESS_KEY_ID",
-        "AWS_LOADER_S3_SECRET_ACCESS_KEY": "/openchallenges/AWS_LOADER_S3_SECRET_ACCESS_KEY",
-        "SECURITY_KEY": "/openchallenges/SECURITY_KEY"
+        "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970",
+        "TAGS": {
+          "CostCenter": "NO PROGRAM / 000000"
+        }
     }
   }
 }

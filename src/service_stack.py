@@ -8,6 +8,7 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as elbv2,
     aws_certificatemanager as acm,
     aws_iam as iam,
+    aws_secretsmanager as sm,
 )
 
 from constructs import Construct
@@ -73,11 +74,21 @@ class ServiceStack(cdk.Stack):
             location = props.container_location.removeprefix("path://")
             image = ecs.ContainerImage.from_asset(location)
 
+        def _get_secret(scope: Construct, id: str, name: str) -> sm.Secret:
+            """Get a secret from the AWS secrets manager"""
+            isecret = sm.Secret.from_secret_name_v2(scope, id, name)
+            return ecs.Secret.from_secrets_manager(isecret)
+
         self.container = self.task_definition.add_container(
             props.container_name,
             image=image,
             memory_limit_mib=props.container_memory,
             environment=props.container_env_vars,
+            secrets={
+                "SECRETS_MANAGER_SECRETS": _get_secret(
+                    self, "sm-secrets", props.container_secret_name
+                )
+            },
             port_mappings=[
                 ecs.PortMapping(
                     name=props.container_name,
@@ -168,7 +179,7 @@ class LoadBalancedServiceStack(ServiceStack):
         https_listener.add_targets(
             "HttpsTarget",
             port=props.container_port,
-            protocol=elbv2.ApplicationProtocol.HTTP,
+            protocol=elbv2.ApplicationProtocol.HTTPS,
             targets=[self.service],
             health_check=elbv2.HealthCheck(
                 path=health_check_path, interval=duration.minutes(health_check_interval)

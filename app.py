@@ -1,35 +1,35 @@
 import aws_cdk as cdk
+import src.utils as utils
 
 from src.network_stack import NetworkStack
 from src.ecs_stack import EcsStack
 from src.service_stack import LoadBalancedServiceStack
 from src.load_balancer_stack import LoadBalancerStack
 from src.service_props import ServiceProps
-import src.utils as utils
-
-cdk_app = cdk.App()
 
 # get the environment
 environment = utils.get_environment()
 stack_name_prefix = f"schematic-{environment}"
-image_version = "0.0.11"
 
-# get VARS from cdk.json
-env_vars = cdk_app.node.try_get_context(environment)
-fully_qualified_domain_name = env_vars["FQDN"]
+cdk_app = cdk.App()
+context_vars = cdk_app.node.try_get_context(environment)
+fully_qualified_domain_name = context_vars["FQDN"]
 subdomain, domain = fully_qualified_domain_name.split(".", 1)
-vpc_cidr = env_vars["VPC_CIDR"]
-certificate_arn = env_vars["CERTIFICATE_ARN"]
+vpc_cidr = context_vars["VPC_CIDR"]
+certificate_arn = context_vars["CERTIFICATE_ARN"]
+env_tags = context_vars["TAGS"]
 
-# get secrets from cdk.json or aws parameter store
-secrets = utils.get_secrets(cdk_app)
+# recursively apply tags to all stack resources
+if env_tags:
+    for key, value in env_tags.items():
+        cdk.Tags.of(cdk_app).add(key, value)
 
+# Generate stacks
 network_stack = NetworkStack(cdk_app, f"{stack_name_prefix}-network", vpc_cidr)
 
 ecs_stack = EcsStack(
     cdk_app, f"{stack_name_prefix}-ecs", network_stack.vpc, fully_qualified_domain_name
 )
-ecs_stack.add_dependency(network_stack)
 
 # From AWS docs https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect-concepts-deploy.html
 # The public discovery and reachability should be created last by AWS CloudFormation, including the frontend
@@ -39,23 +39,13 @@ load_balancer_stack = LoadBalancerStack(
     cdk_app, f"{stack_name_prefix}-load-balancer", network_stack.vpc
 )
 
-apex_service_props = ServiceProps(
-    "schematic-apex",
-    8000,
-    200,
-    f"ghcr.io/sage-bionetworks/schematic-apex:{image_version}",
-    {
-        "API_DOCS_HOST": "schematic-api-docs",
-        "API_DOCS_PORT": "8010",
-        "API_GATEWAY_HOST": "schematic-api-gateway",
-        "API_GATEWAY_PORT": "8082",
-        "APP_HOST": "schematic-app",
-        "APP_PORT": "4200",
-        "THUMBOR_HOST": "schematic-thumbor",
-        "THUMBOR_PORT": "8889",
-        "ZIPKIN_HOST": "schematic-zipkin",
-        "ZIPKIN_PORT": "9411",
-    },
+app_service_props = ServiceProps(
+    "schematic-app",
+    443,
+    4096,
+    "ghcr.io/sage-bionetworks/schematic:v0.1.90-beta",
+    {},
+    "schematic-dev-DockerFargateStack/dev/ecs",
 )
 
 app_service_stack = LoadBalancedServiceStack(
@@ -63,12 +53,11 @@ app_service_stack = LoadBalancedServiceStack(
     f"{stack_name_prefix}-app",
     network_stack.vpc,
     ecs_stack.cluster,
-    apex_service_props,
+    app_service_props,
     load_balancer_stack.alb,
     certificate_arn,
     health_check_path="/health",
     health_check_interval=5,
 )
-app_service_stack.add_dependency(load_balancer_stack)
 
 cdk_app.synth()

@@ -3,7 +3,7 @@
 
 AWS CDK app for deploying [Schematic](schematic.api.sagebionetworks.org).
 
-# Perequisites
+# Prerequisites
 
 AWS CDK projects require some bootstrapping before synthesis or deployment.
 Please review the [bootstapping documentation](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_bootstrap)
@@ -101,6 +101,7 @@ python -m pytest tests/ -s -v
 
 Deployment context is set in the [cdk.json](cdk.json) file.  An `ENV` environment variable must be
 set to tell the CDK which environment's variables to use when synthesising or deploying the stacks.
+The deployment context is the place to set infrastructure variables.
 
 Set an environment in cdk.json in `context` section of cdk.json:
 
@@ -117,7 +118,7 @@ Set an environment in cdk.json in `context` section of cdk.json:
   }
 ```
 
-For example, using the `prod` environment:
+For example, synthesis with the `prod` environment variables:
 
 ```console
 ENV=prod cdk synth
@@ -141,85 +142,29 @@ Once created take the ARN of the certificate and add it to a context in cdk.json
 
 # Secrets
 
-Secrets can be stored in one of the following locations:
-  * AWS SSM parameter store
-  * Local context in [cdk.json](cdk.json) file
+Secrets can be manually created in the
+[AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_secret.html)
 
-## Loading directly from cdk.json
+To pass secrets to a container set the secrets manager `secret name`
+when creating a ServiceProp objects:
 
-Set secrets directly in cdk.json in `context` section of cdk.json:
-
-```text
-  "context": {
-    "secrets": {
-        "MARIADB_PASSWORD": "Dummy",
-        "MARIADB_ROOT_PASSWORD": "Dummy",
-        "GIT_HOST_KEY": "Host123",
-        "GIT_PRIVATE_KEY": "-----BEGIN OPENSSH PRIVATE KEY-----\nDUMMY_GIT_PRIVATE_KEY\n-----END OPENSSH PRIVATE KEY-----",
-        "AWS_LOADER_S3_ACCESS_KEY_ID": "AccessKey123",
-        "AWS_LOADER_S3_SECRET_ACCESS_KEY": "SecretAccessKey123",
-        "SECURITY_KEY": "SecurityKey123"
-    }
-  }
+```python
+app_service_props = ServiceProps(
+    "app", 443, 1024, f"ghcr.io/sage-bionetworks/app:v1.0", container_env_vars={},
+    container_secret_name="app/dev/DATABASE"
+)
 ```
 
-## Loading from ssm parameter store
-
-Set secrets to the SSM parameter names in `context` section of cdk.json:
-
-```text
-  "context": {
-    "secrets": {
-        "MARIADB_PASSWORD": "/openchallenges/MARIADB_PASSWORD",
-        "MARIADB_ROOT_PASSWORD": "/openchallenges/MARIADB_ROOT_PASSWORD",
-        "GIT_HOST_KEY": "/openchallenges/GIT_HOST_KEY",
-        "GIT_PRIVATE_KEY": "/openchallenges/GIT_PRIVATE_KEY",
-        "AWS_LOADER_S3_ACCESS_KEY_ID": "/openchallenges/AWS_LOADER_S3_ACCESS_KEY_ID",
-        "AWS_LOADER_S3_SECRET_ACCESS_KEY": "/openchallenges/AWS_LOADER_S3_SECRET_ACCESS_KEY",
-        "SECURITY_KEY": "/openchallenges/SECURITY_KEY"
-    }
-  }
-```
-
-where the values of these KVs (e.g. `/openchallenges/MARIADB_PASSWORD`) refer to SSM parameters that
-must be created manually.
-
-![AWS secrets manager](docs/aws-parameter-store.png)
-
-## Specify secret location
-
-Set the `SECRETS` environment variable to specify the location where secrets should be loaded from.
-
-Load secrets directly from cdk.json file:
-
-```console
-SECRETS=local cdk synth
-```
-
-Load secrets from AWS SSM parameter store:
-
-```console
-AWS_PROFILE=<your-aws-profile> AWS_DEFAULT_REGION=us-east-1 SECRETS=ssm cdk synth
+For example, the KVs for `app/dev/DATABASE` could be:
+```json
+{
+    "DATABASE_USER": "maria",
+    "DATABASE_PASSWORD": "password"
+}
 ```
 
 > [!NOTE]
-> Setting `SECRETS=ssm` requires access to an AWS account
-
-## Override secrets from command line
-
-The CDK CLI allows overriding context variables:
-
-To load secrets directly from passed in values:
-
-```console
-SECRETS=local cdk --context  secrets='{"MARIADB_PASSWORD": "Dummy", "MARIADB_ROOT_PASSWORD": "Dummy", ..}' synth
-```
-
-To load secrets from SSM parameter store with overridden SSM parameter names:
-
-```console
-SECRETS=ssm cdk --context  "secrets"='{"MARIADB_PASSWORD": "/test/mariadb-root-pass", "MARIADB_ROOT_PASSWORD": "/test/mariadb-root-pass", ..}' synth
-```
+> Retrieving secrets requires access to the AWS Secrets Manager
 
 # Deployment
 
@@ -227,11 +172,11 @@ SECRETS=ssm cdk --context  "secrets"='{"MARIADB_PASSWORD": "/test/mariadb-root-p
 
 There are a few items that need to be manually bootstrapped before deploying the application.
 
-* Add application [secrets](#Secrets) to either the cdk.json or the AWS System Manager parameter store
+* Add secrets to the AWS Secrets Manager
 * Create an [ACM certificate for the application](#Certificates) using the AWS Certificates Manager
 * Add the Certificate ARN to the cdk.json
 * Update references to the docker images in [app.py](app.py)
-  (i.e. `ghcr.io/sage-bionetworks/schematic-xxx:<tag>`)
+  (i.e. `ghcr.io/sage-bionetworks/app-xxx:<tag>`)
 * (Optional) Update the `ServiceProps` objects in [app.py](app.py) with parameters specific to
   each container.
 
@@ -273,7 +218,7 @@ Deployment requires setting up an [AWS profile](https://docs.aws.amazon.com/cli/
 then executing the following command:
 
 ```console
-AWS_PROFILE=itsandbox-dev AWS_DEFAULT_REGION=us-east-1 ENV=dev SECRETS=ssm cdk deploy --all
+AWS_PROFILE=itsandbox-dev AWS_DEFAULT_REGION=us-east-1 ENV=dev cdk deploy --all
 ```
 
 ## Force new deployment
@@ -294,9 +239,9 @@ Example to get an interactive shell run into a container:
 
 ```console
 AWS_PROFILE=itsandbox-dev AWS_DEFAULT_REGION=us-east-1 aws ecs execute-command \
-  --cluster SchematicEcs-ClusterEB0386A7-BygXkQgSvdjY \
+  --cluster AppEcs-ClusterEB0386A7-BygXkQgSvdjY \
   --task a2916461f65747f390fd3e29f1b387d8 \
-  --container schematic-mariadb \
+  --container app-mariadb \
   --command "/bin/sh" --interactive
 ```
 
@@ -310,8 +255,8 @@ The workflow for continuous integration:
 * Create PR from the git dev branch
 * PR is reviewed and approved
 * PR is merged
-* CI deploys changes to the dev environment (dev.schematic.io) in the AWS dev account.
+* CI deploys changes to the dev environment (dev.app.io) in the AWS dev account.
 * Changes are promoted (or merged) to the git stage branch.
-* CI deploys changes to the staging environment (stage.schematic.io) in the AWS prod account.
+* CI deploys changes to the staging environment (stage.app.io) in the AWS prod account.
 * Changes are promoted (or merged) to the git prod branch.
-* CI deploys changes to the prod environment (prod.schematic.io) in the AWS prod account.
+* CI deploys changes to the prod environment (prod.app.io) in the AWS prod account.

@@ -5,7 +5,7 @@ from src.network_stack import NetworkStack
 
 
 def test_vpc_created():
-    context = {"dev": {"VPC_CIDR": "10.254.192.0/24", "DNS_NAMESPACE": "src.io"}}
+    context = {"dev": {"VPC_CIDR": "10.254.192.0/24", "DNS_NAMESPACE": "app.io"}}
 
     app = core.App(context=context)
     env_context = app.node.try_get_context("dev")
