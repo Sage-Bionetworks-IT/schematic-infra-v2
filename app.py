@@ -34,7 +34,7 @@ match environment:
             "FQDN": "dev.schematic.io",
             "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:631692904429:certificate/0e9682f6-3ffa-46fb-9671-b6349f5164d6",
             "TAGS": {"CostCenter": "NO PROGRAM / 000000"},
-            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.4.1",
+            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.7.1",
         }
     case _:
         valid_envs_str = ",".join(VALID_ENVIRONMENTS)
