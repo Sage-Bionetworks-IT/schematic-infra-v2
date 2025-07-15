@@ -26,7 +26,7 @@ match environment:
             "FQDN": "stage.schematic.io",
             "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970",
             "TAGS": {"CostCenter": "NO PROGRAM / 000000"},
-            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.7.1",
+            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.7.1-rc",
         }
     case "dev":
         environment_variables = {
