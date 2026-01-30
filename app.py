@@ -9,7 +9,7 @@ from src.service_props import ServiceProps, ServiceSecret
 from src.service_stack import LoadBalancedServiceStack, ServiceStack
 
 # get the environment and set environment specific variables
-VALID_ENVIRONMENTS = ["dev", "stage", "prod"]
+VALID_ENVIRONMENTS = ["prod"]
 environment = environ.get("ENV")
 match environment:
     case "prod":
@@ -17,22 +17,6 @@ match environment:
             "VPC_CIDR": "10.254.194.0/24",
             "FQDN": "prod.schematic.io",
             "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970",
-            "TAGS": {"CostCenter": "NO PROGRAM / 000000"},
-            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.4.1",
-        }
-    case "stage":
-        environment_variables = {
-            "VPC_CIDR": "10.254.193.0/24",
-            "FQDN": "stage.schematic.io",
-            "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:878654265857:certificate/d11fba3c-1957-48ba-9be0-8b1f460ee970",
-            "TAGS": {"CostCenter": "NO PROGRAM / 000000"},
-            "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.4.1",
-        }
-    case "dev":
-        environment_variables = {
-            "VPC_CIDR": "10.254.192.0/24",
-            "FQDN": "dev.schematic.io",
-            "CERTIFICATE_ARN": "arn:aws:acm:us-east-1:631692904429:certificate/0e9682f6-3ffa-46fb-9671-b6349f5164d6",
             "TAGS": {"CostCenter": "NO PROGRAM / 000000"},
             "SCHEMATIC_CONTAINER_LOCATION": "ghcr.io/sage-bionetworks/schematic:v25.4.1",
         }
